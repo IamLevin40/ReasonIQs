@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff8ea">
+  <meta name="description" content="ReasonIQs reasoning practice workspace">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='assets/icons/mark.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <title>ReasonIQs · Practice workspace</title>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to practice workspace</a>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-inner">
+        <a class="brand" href="#/" aria-label="ReasonIQs home">
+          <img src="{{ url_for('static', filename='assets/icons/mark.svg') }}" alt="" width="34" height="34">
+          <span>Reason<span class="brand-iq">IQ</span><span class="brand-s">s</span></span>
+        </a>
+        <nav class="top-nav" aria-label="Main navigation">
+          <a href="#/" id="home-link">Home</a>
+          <span class="nav-divider" aria-hidden="true"></span>
+          <span class="nav-label">The practice lab <span aria-hidden="true">✦</span></span>
+        </nav>
+      </div>
+    </header>
+    <main id="workspace" class="workspace" tabindex="-1">
+      <div class="loading-state" role="status">Opening your reasoning workspace…</div>
+    </main>
+    <footer class="app-footer"><span>REASONIQS / A LITTLE PRACTICE GOES A LONG WAY</span><span>Notice more. Think sharper.</span></footer>
+  </div>
+  <div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
+  <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "types": [
+    {
+      "id": "mechanical", "title": "Mechanical Reasoning", "subtitle": "Understand how systems move", "description": "Explore forces, motion, and the relationships between working parts.", "icon": "/static/assets/icons/mechanical.svg", "accent": "mechanical", "active": true,
+      "subtypes": [
+        {"id":"gears-rotation","parent_id":"mechanical","title":"Gears & Rotation","subtitle":"Direction and speed","description":"Trace rotational direction and relative speed through connected gears.","icon":"/static/assets/icons/mechanical.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"mechanical.gears_rotation","active":true},
+        {"id":"pulleys-belts","parent_id":"mechanical","title":"Pulleys & Belts","subtitle":"Linked movement","description":"Reason about how pulleys and belts transfer movement.","icon":"/static/assets/icons/mechanical.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"mechanical.pulleys_belts","active":true},
+        {"id":"levers-balance","parent_id":"mechanical","title":"Levers & Balance","subtitle":"Forces in equilibrium","description":"Compare loads, pivot positions, and balanced systems.","icon":"/static/assets/icons/mechanical.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"mechanical.levers_balance","active":true},
+        {"id":"forces-motion","parent_id":"mechanical","title":"Forces & Motion","subtitle":"Predict what moves","description":"Follow pushes, pulls, and changes in movement.","icon":"/static/assets/icons/mechanical.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"mechanical.forces_motion","active":true},
+        {"id":"fluid-systems","parent_id":"mechanical","title":"Fluid Systems","subtitle":"Pressure and flow","description":"Consider how pressure and flow behave in connected spaces.","icon":"/static/assets/icons/mechanical.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"mechanical.fluid_systems","active":true},
+        {"id":"mechanical-relationships","parent_id":"mechanical","title":"Mechanical Relationships","subtitle":"Parts working together","description":"Connect multiple mechanisms in a single system.","icon":"/static/assets/icons/mechanical.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"mechanical.relationships","active":true}
+      ]
+    },
+    {
+      "id": "spatial", "title": "Spatial Reasoning", "subtitle": "Think across shapes and space", "description": "Rotate, reflect, and assemble visual relationships in your mind.", "icon": "/static/assets/icons/spatial.svg", "accent": "spatial", "active": true,
+      "subtypes": [
+        {"id":"mental-rotation","parent_id":"spatial","title":"Mental Rotation","subtitle":"Turn shapes in mind","description":"Recognize shapes across different orientations.","icon":"/static/assets/icons/spatial.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"spatial.mental_rotation","active":true},
+        {"id":"cube-folding","parent_id":"spatial","title":"Cube Folding","subtitle":"From flat to solid","description":"Imagine how a net folds into a three-dimensional cube.","icon":"/static/assets/icons/spatial.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"spatial.cube_folding","active":true},
+        {"id":"pattern-transformation","parent_id":"spatial","title":"Pattern Transformation","subtitle":"Follow visual rules","description":"Identify how a visual pattern changes step by step.","icon":"/static/assets/icons/spatial.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"spatial.pattern_transformation","active":true},
+        {"id":"mirror-reflection","parent_id":"spatial","title":"Mirror & Reflection","subtitle":"Reverse the view","description":"Compare forms across reflective axes.","icon":"/static/assets/icons/spatial.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"spatial.mirror_reflection","active":true},
+        {"id":"spatial-orientation","parent_id":"spatial","title":"Spatial Orientation","subtitle":"Navigate directions","description":"Track position and direction through changing viewpoints.","icon":"/static/assets/icons/spatial.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"spatial.orientation","active":true},
+        {"id":"shape-composition","parent_id":"spatial","title":"Shape Composition","subtitle":"Build a whole","description":"Combine fragments to understand a completed figure.","icon":"/static/assets/icons/spatial.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"spatial.shape_composition","active":true}
+      ]
+    },
+    {
+      "id": "verbal", "title": "Verbal Reasoning", "subtitle": "Find meaning and logic", "description": "Work through relationships, statements, and short passages.", "icon": "/static/assets/icons/verbal.svg", "accent": "verbal", "active": true,
+      "subtypes": [
+        {"id":"analogies","parent_id":"verbal","title":"Analogies","subtitle":"Match relationships","description":"Find a parallel relationship between words or ideas.","icon":"/static/assets/icons/verbal.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"verbal.analogies","active":true},
+        {"id":"word-relationships","parent_id":"verbal","title":"Word Relationships","subtitle":"Connect meanings","description":"Compare how words relate by meaning or function.","icon":"/static/assets/icons/verbal.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"verbal.word_relationships","active":true},
+        {"id":"logical-statements","parent_id":"verbal","title":"Logical Statements","subtitle":"Test what follows","description":"Decide what can be concluded from a set of statements.","icon":"/static/assets/icons/verbal.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"verbal.logical_statements","active":true},
+        {"id":"classifications","parent_id":"verbal","title":"Classifications","subtitle":"Find the grouping","description":"Identify shared properties and exceptions.","icon":"/static/assets/icons/verbal.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"verbal.classifications","active":true},
+        {"id":"sentence-relationships","parent_id":"verbal","title":"Sentence Relationships","subtitle":"Compare ideas","description":"Read how claims support, contrast, or refine one another.","icon":"/static/assets/icons/verbal.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"verbal.sentence_relationships","active":true},
+        {"id":"deductive-passages","parent_id":"verbal","title":"Deductive Passages","subtitle":"Read and infer","description":"Draw conclusions from a short structured passage.","icon":"/static/assets/icons/verbal.svg","difficulties":["Easy","Average","Challenge"],"generator_key":"verbal.deductive_passages","active":true}
+      ]
+    }
+  ]
+}
