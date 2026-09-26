@@ -51,6 +51,23 @@ class ReasonIQsApiTests(unittest.TestCase):
             self.assertEqual(response.status_code, 400, (field, value))
             self.assertIn("error", response.json)
 
+    def test_placeholder_session_exercises_content_formats(self):
+        response = self.client.post("/api/practice", json={
+            "type_id": "mechanical", "subtype_id": "gears-rotation",
+            "difficulty": "Average", "item_count": 5, "choice_count": 4,
+            "timer_enabled": False, "seconds_per_item": 45,
+        })
+        questions = response.json["questions"]
+        self.assertEqual(len(questions[0]["figures"]), 2)
+        self.assertTrue(questions[0]["text"])
+        self.assertFalse(questions[0]["choices"][0].get("text"))
+        self.assertEqual(questions[0]["choices"][0]["figures"][0]["kind"], "svg")
+        self.assertFalse(questions[1]["text"])
+        self.assertEqual(len(questions[1]["figures"]), 1)
+        self.assertTrue(questions[2]["choices"][0]["text"])
+        self.assertEqual(len(questions[2]["choices"][0]["figures"]), 1)
+        self.assertFalse(questions[3]["figures"])
+
 
 if __name__ == "__main__":
     unittest.main()

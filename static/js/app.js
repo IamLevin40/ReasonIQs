@@ -2,6 +2,8 @@ import { loadReasoning, createPractice } from "./api.js";
 import { state, findType, findSubtype, validateConfig, saveConfig, beginSession, finishSession } from "./state.js";
 import { startTimer, stopTimer } from "./timer.js";
 import { renderLoading, renderError, renderHome, renderSubtypes, renderSetup, updateSetup, renderTest, updateTimerDisplay, renderResult } from "./render.js";
+import { figureEntry, exportFigureBlock } from "./figures.js";
+import { openFigureInspector, closeFigureInspector } from "./figure-inspector.js";
 
 const workspace = document.querySelector("#workspace");
 const announcer = document.querySelector("#announcer");
@@ -42,6 +44,7 @@ function selectedPath(path) {
 
 function route() {
   if (!state.catalog) return;
+  closeFigureInspector();
   const path = pathFromHash();
   if (state.screen === "test" && state.sessionStatus === "active" && path !== currentPath) {
     if (!window.confirm("Leave this practice session? Your current answers will be discarded.")) {
@@ -167,9 +170,27 @@ async function startPractice() {
   }
 }
 
-workspace.addEventListener("click", event => {
+workspace.addEventListener("click", async event => {
+  const inspect = event.target.closest("[data-figure-inspect]");
+  if (inspect) { openFigureInspector(figureEntry(inspect)); return; }
+  const exportButton = event.target.closest("[data-figure-export]");
+  if (exportButton) {
+    const { block, host } = figureEntry(exportButton);
+    exportButton.disabled = true;
+    try { await exportFigureBlock(host, block); announce(`Downloaded ${block.filename}`); }
+    catch (error) { announce(`Figure download failed: ${error.message}`); }
+    finally { exportButton.disabled = false; }
+    return;
+  }
   const control = event.target.closest("button");
-  if (!control) return;
+  if (!control) {
+    const choice = event.target.closest(".choice");
+    if (choice && !event.target.closest("label, .figure-card") && state.screen === "test") {
+      const radio = choice.querySelector('input[name="answer"]');
+      if (radio && !radio.disabled) radio.click();
+    }
+    return;
+  }
   if (control.dataset.type) navigate(`/type/${control.dataset.type}`);
   else if (control.dataset.subtype) navigate(`/setup/${state.type.id}/${control.dataset.subtype}`);
   else if (control.dataset.route) navigate(control.dataset.route);

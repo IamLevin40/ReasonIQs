@@ -1,4 +1,7 @@
 import { state, validateConfig } from "./state.js";
+import { renderQuestionContent } from "./question-renderer.js";
+import { mountFigures } from "./figures.js";
+import { closeFigureInspector } from "./figure-inspector.js";
 
 const workspace = document.querySelector("#workspace");
 const iconFallback = "/static/assets/icons/mark.svg";
@@ -98,20 +101,22 @@ export function updateSetup() {
   document.querySelector("#start-button").disabled = Boolean(error);
 }
 export function renderTest() {
+  closeFigureInspector();
   const question = state.questions[state.index];
   const count = state.questions.length;
   const selected = state.answers[state.index];
   const locked = state.timedOut[state.index];
+  const content = renderQuestionContent(question, state.index + 1, selected, locked, escapeHtml);
   shell(`<div class="test-layout"><div class="test-topline"><button class="back-link" type="button" data-route="/setup/${attr(type().id)}/${attr(subtype().id)}"><span aria-hidden="true">←</span> Leave practice</button><span class="test-meta">${escapeHtml(type().title)} / ${escapeHtml(state.config.difficulty)}</span></div>
     <section class="panel test-card" aria-labelledby="question-heading"><div class="test-header"><div><span class="test-kicker">● ROUND IN PROGRESS · ${escapeHtml(subtype().title)}</span><h1 id="question-heading" tabindex="-1">Question ${state.index + 1} of ${count}</h1><p>${state.answers.filter(Boolean).length} answered · ${state.timedOut.filter(Boolean).length} timed out</p></div>
     ${state.config.timer_enabled ? '<div class="timer" id="timer" role="timer"><strong id="timer-value"></strong><small>seconds left</small></div>' : ""}</div>
     <div class="progress-track" role="progressbar" aria-valuenow="${state.index + 1}" aria-valuemin="1" aria-valuemax="${count}" aria-label="Question position"><span style="width:${((state.index + 1) / count) * 100}%"></span></div>
-    <div class="question-area"><span class="placeholder-label">Prototype question</span><p class="question-prompt">${escapeHtml(question.prompt)}</p>
-      ${question.visual?.src ? `<div class="question-visual"><img src="${attr(question.visual.src)}" alt="${attr(question.visual.alt || "Question visual")}" data-icon></div>` : ""}
-      <fieldset class="choices" ${locked ? "disabled" : ""}><legend>Choose one answer</legend>${question.choices.map((choice, i) => `<label class="choice"><input type="radio" name="answer" value="${attr(choice.id)}" ${selected === choice.id ? "checked" : ""}><span class="choice-letter" aria-hidden="true">${String.fromCharCode(65 + i)}</span><span class="choice-text">${escapeHtml(choice.text)}</span><span class="choice-check" aria-hidden="true">✓</span></label>`).join("")}</fieldset>
+    <div class="question-area">${question.metadata?.placeholder ? '<span class="placeholder-label">Prototype question</span>' : ""}
+      ${content.html}
       ${locked ? '<p class="timed-out-note">Time ran out for this item. You can continue through the session.</p>' : ""}
     </div><div class="test-actions"><button class="btn btn-secondary" type="button" data-action="previous" ${state.index === 0 ? "disabled" : ""}>← Previous</button><div class="right-actions"><button class="btn btn-text" type="button" data-action="submit">Finish</button><button class="btn btn-primary" type="button" data-action="next">${state.index === count - 1 ? "Finish session" : "Next →"}</button></div></div></section>
     <nav class="navigator" aria-label="Question navigator">${state.questions.map((_, i) => `<button type="button" class="nav-dot ${i === state.index ? "current" : ""} ${state.answers[i] ? "answered" : ""} ${state.timedOut[i] ? "timed-out" : ""}" data-question="${i}" aria-label="Question ${i + 1}, ${state.timedOut[i] ? "timed out" : state.answers[i] ? "answered" : "unanswered"}" ${i === state.index ? 'aria-current="step"' : ""}>${i + 1}</button>`).join("")}</nav></div>`);
+  mountFigures(workspace, content.blocks);
   updateTimerDisplay();
 }
 export function updateTimerDisplay() {
