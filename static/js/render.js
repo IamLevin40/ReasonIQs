@@ -1,4 +1,4 @@
-import { state, validateConfig } from "./state.js";
+import { state, validateConfig, cubeThemes } from "./state.js";
 import { renderQuestionContent } from "./question-renderer.js";
 import { mountFigures } from "./figures.js";
 import { closeFigureInspector } from "./figure-inspector.js";
@@ -63,6 +63,7 @@ export function renderSubtypes() {
 }
 export function renderSetup() {
   const config = state.config;
+  const diceSubtype = ["spatial.dice_folding", "spatial.dice_unfolding"].includes(subtype().generator_key);
   shell(`${context([{ label: "Home", path: "/" }, { label: type().title, path: `/type/${type().id}` }, { label: subtype().title }])}
     <button class="back-link" type="button" data-route="/type/${attr(type().id)}"><span aria-hidden="true">←</span> All ${escapeHtml(type().title)} topics</button>
     <section class="setup-intro"><div><p class="eyebrow">Build your round / Step 03</p><h1>Set your practice pace.</h1><p class="lead">A few choices before you begin ${escapeHtml(subtype().title)}.</p></div><span class="setup-badge" aria-hidden="true">✦<small>READY<br>SET<br>THINK</small></span></section>
@@ -76,10 +77,11 @@ export function renderSetup() {
         <div class="field-row" id="duration-row" ${config.timer_enabled ? "" : 'hidden'}><div class="field-copy"><label for="seconds-per-item">Seconds per item</label><small>10 to 300 seconds</small></div><input class="field-control" id="seconds-per-item" name="seconds_per_item" type="number" min="10" max="300" step="1" required value="${attr(config.seconds_per_item)}" ${config.timer_enabled ? "" : "disabled"}></div>
         <hr class="field-divider">
         <fieldset class="difficulty-group"><legend>Difficulty</legend><div class="segmented">${["Easy", "Average", "Challenge"].map(level => `<label class="segment"><input type="radio" name="difficulty" value="${level}" ${config.difficulty === level ? "checked" : ""} ${subtype().difficulties.includes(level) ? "" : "disabled"}><span>${level}</span></label>`).join("")}</div></fieldset>
+        ${diceSubtype ? `<div class="field-row"><div class="field-copy"><label for="cube-theme">Face markings</label><small>All themes work without color clues</small></div><select class="field-control theme-control" id="cube-theme" name="theme">${cubeThemes.map(theme => `<option value="${attr(theme)}" ${config.theme === theme ? "selected" : ""}>${escapeHtml(theme)}</option>`).join("")}</select></div>` : ""}
       </div><p class="validation" id="setup-error" role="status"></p>
     </form>
     <aside class="panel summary-panel" aria-label="Session summary" ${style(type())}><p class="small-heading">Your round at a glance</p><div class="summary-identity"><span class="summary-icon"><img src="${icon(type())}" alt="" data-icon></span><span><strong>${escapeHtml(subtype().title)}</strong><small>${escapeHtml(type().title)}</small></span></div>
-    <dl class="summary-list"><div><dt>Items</dt><dd id="summary-items"></dd></div><div><dt>Choices</dt><dd id="summary-choices"></dd></div><div><dt>Difficulty</dt><dd id="summary-difficulty"></dd></div><div><dt>Timer</dt><dd id="summary-timer"></dd></div></dl>
+    <dl class="summary-list"><div><dt>Items</dt><dd id="summary-items"></dd></div><div><dt>Choices</dt><dd id="summary-choices"></dd></div><div><dt>Difficulty</dt><dd id="summary-difficulty"></dd></div>${diceSubtype ? '<div><dt>Markings</dt><dd id="summary-theme"></dd></div>' : ""}<div><dt>Timer</dt><dd id="summary-timer"></dd></div></dl>
     <p class="summary-line" id="summary-line" aria-live="polite"></p>
     <button class="btn btn-primary btn-full" id="start-button" type="submit" form="setup-form">Start practice <span aria-hidden="true">→</span></button></aside></div>`);
   updateSetup();
@@ -95,27 +97,38 @@ export function updateSetup() {
   document.querySelector("#summary-items").textContent = Number.isFinite(config.item_count) ? config.item_count : "—";
   document.querySelector("#summary-choices").textContent = Number.isFinite(config.choice_count) ? config.choice_count : "—";
   document.querySelector("#summary-difficulty").textContent = config.difficulty;
+  if (document.querySelector("#summary-theme")) document.querySelector("#summary-theme").textContent = config.theme;
   document.querySelector("#summary-timer").textContent = config.timer_enabled ? `${config.seconds_per_item} sec/item` : "Off";
   document.querySelector("#summary-line").textContent = `${config.item_count || "—"} items · ${config.choice_count || "—"} choices · ${config.difficulty} · ${config.timer_enabled ? `${config.seconds_per_item} sec/item` : "untimed"}`;
   document.querySelector("#setup-error").textContent = error;
   document.querySelector("#start-button").disabled = Boolean(error);
+}
+function itemStatus(index) {
+  if (state.timedOut[index]) return "timed out";
+  if (state.submitted[index]) return state.answers[index] === state.questions[index].correct_answer_id ? "correct" : "incorrect";
+  return state.answers[index] ? "selected" : "unanswered";
 }
 export function renderTest() {
   closeFigureInspector();
   const question = state.questions[state.index];
   const count = state.questions.length;
   const selected = state.answers[state.index];
-  const locked = state.timedOut[state.index];
-  const content = renderQuestionContent(question, state.index + 1, selected, locked, escapeHtml);
+  const submitted = state.submitted[state.index];
+  const locked = state.timedOut[state.index] || submitted;
+  const content = renderQuestionContent(question, state.index + 1, selected, locked, escapeHtml, submitted);
+  const correct = submitted && selected === question.correct_answer_id;
+  const feedback = submitted ? `<div id="answer-feedback" class="answer-feedback ${correct ? "is-correct" : "is-incorrect"}" role="status" tabindex="-1"><strong>${correct ? "Correct" : "Incorrect"}</strong>${question.explanation ? `<p>${escapeHtml(question.explanation)}</p>` : ""}</div>` : '<p id="answer-feedback" class="answer-feedback-pending" role="status"></p>';
   shell(`<div class="test-layout"><div class="test-topline"><button class="back-link" type="button" data-route="/setup/${attr(type().id)}/${attr(subtype().id)}"><span aria-hidden="true">←</span> Leave practice</button><span class="test-meta">${escapeHtml(type().title)} / ${escapeHtml(state.config.difficulty)}</span></div>
-    <section class="panel test-card" aria-labelledby="question-heading"><div class="test-header"><div><span class="test-kicker">● ROUND IN PROGRESS · ${escapeHtml(subtype().title)}</span><h1 id="question-heading" tabindex="-1">Question ${state.index + 1} of ${count}</h1><p>${state.answers.filter(Boolean).length} answered · ${state.timedOut.filter(Boolean).length} timed out</p></div>
-    ${state.config.timer_enabled ? '<div class="timer" id="timer" role="timer"><strong id="timer-value"></strong><small>seconds left</small></div>' : ""}</div>
+    <section class="panel test-card" aria-labelledby="question-heading"><div class="test-header"><div><span class="test-kicker">● ROUND IN PROGRESS · ${escapeHtml(subtype().title)}</span><h1 id="question-heading" tabindex="-1">Question ${state.index + 1} of ${count}</h1><p>${state.submitted.filter(Boolean).length} submitted · ${state.timedOut.filter(Boolean).length} timed out</p></div>
+    ${state.config.timer_enabled && !submitted ? '<div class="timer" id="timer" role="timer"><strong id="timer-value"></strong><small>seconds left</small></div>' : ""}</div>
     <div class="progress-track" role="progressbar" aria-valuenow="${state.index + 1}" aria-valuemin="1" aria-valuemax="${count}" aria-label="Question position"><span style="width:${((state.index + 1) / count) * 100}%"></span></div>
     <div class="question-area">${question.metadata?.placeholder ? '<span class="placeholder-label">Prototype question</span>' : ""}
       ${content.html}
-      ${locked ? '<p class="timed-out-note">Time ran out for this item. You can continue through the session.</p>' : ""}
+      ${state.timedOut[state.index] ? '<p class="timed-out-note">Time ran out for this item. You can continue through the session.</p>' : ""}
+      <button class="btn btn-secondary answer-submit" type="button" data-action="submit-answer" ${locked ? "disabled" : ""}>${submitted ? "Submitted" : "Submit answer"}</button>
+      ${feedback}
     </div><div class="test-actions"><button class="btn btn-secondary" type="button" data-action="previous" ${state.index === 0 ? "disabled" : ""}>← Previous</button><div class="right-actions"><button class="btn btn-text" type="button" data-action="submit">Finish</button><button class="btn btn-primary" type="button" data-action="next">${state.index === count - 1 ? "Finish session" : "Next →"}</button></div></div></section>
-    <nav class="navigator" aria-label="Question navigator">${state.questions.map((_, i) => `<button type="button" class="nav-dot ${i === state.index ? "current" : ""} ${state.answers[i] ? "answered" : ""} ${state.timedOut[i] ? "timed-out" : ""}" data-question="${i}" aria-label="Question ${i + 1}, ${state.timedOut[i] ? "timed out" : state.answers[i] ? "answered" : "unanswered"}" ${i === state.index ? 'aria-current="step"' : ""}>${i + 1}</button>`).join("")}</nav></div>`);
+    <nav class="navigator" aria-label="Question navigator">${state.questions.map((_, i) => `<button type="button" class="nav-dot ${i === state.index ? "current" : ""} ${state.submitted[i] ? "answered" : ""} ${state.timedOut[i] ? "timed-out" : ""} ${itemStatus(i)}" data-question="${i}" aria-label="Question ${i + 1}, ${itemStatus(i)}" ${i === state.index ? 'aria-current="step"' : ""}>${i + 1}</button>`).join("")}</nav></div>`);
   mountFigures(workspace, content.blocks);
   updateTimerDisplay();
 }
@@ -129,10 +142,11 @@ export function updateTimerDisplay() {
 }
 export function renderResult() {
   const result = state.result;
+  const placeholder = state.questions.some(question => question.metadata?.placeholder);
   shell(`<div class="result-layout">${context([{ label: "Home", path: "/" }, { label: type().title, path: `/type/${type().id}` }, { label: subtype().title, path: `/setup/${type().id}/${subtype().id}` }, { label: "Summary" }])}
     <section class="panel result-panel"><p class="eyebrow">Round recap / Step 04</p><h1>Session complete.</h1><p class="lead">${escapeHtml(type().title)} / ${escapeHtml(subtype().title)} · ${escapeHtml(state.config.difficulty)}</p>
-    <div class="result-score"><strong>${result.correct}/${result.total}</strong><span>placeholder score</span></div>
+    <div class="result-score"><strong>${result.correct}/${result.total}</strong><span>${placeholder ? "placeholder score" : "correct answers"}</span></div>
     <div class="result-grid"><div class="result-stat"><strong>${result.answered}</strong><span>Answered</span></div><div class="result-stat"><strong>${result.unanswered}</strong><span>Unanswered</span></div><div class="result-stat"><strong>${result.timedOut}</strong><span>Timed out</span></div></div>
-    <p class="helper" style="margin:20px 0 0">This score uses temporary placeholder answers. Procedural questions and explanations will replace them later.</p>
+    ${placeholder ? '<p class="helper" style="margin:20px 0 0">This score uses temporary placeholder answers. Procedural questions and explanations will replace them later.</p>' : ""}
     <div class="result-actions"><button class="btn btn-primary" type="button" data-action="restart">Practice again</button><button class="btn btn-secondary" type="button" data-route="/setup/${attr(type().id)}/${attr(subtype().id)}">Change settings</button><button class="btn btn-text" type="button" data-route="/type/${attr(type().id)}">Choose another focus</button></div></section></div>`);
 }

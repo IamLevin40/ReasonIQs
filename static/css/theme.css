@@ -394,6 +394,8 @@ h2 { font-weight: 790; }
 .choice-figures .figure-card { flex-basis: 140px; }
 .choice-figures .figure-view { min-height: 85px; }
 .choice-figures .figure-surface { padding: 10px; background: #fff; }
+.choice-figures .figure-surface { cursor: pointer; }
+.choice:has(input:disabled) .figure-surface { cursor: default; }
 .choice-figures .figure-view > * { max-height: 300px; }
 .choice:has(input:disabled) { opacity: 1; }
 .choice:has(input:disabled) .choice-select { opacity: .65; }

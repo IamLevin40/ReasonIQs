@@ -1,6 +1,6 @@
 # ReasonIQs
 
-A focused reasoning-practice prototype built with Flask and vanilla JavaScript. Questions are intentionally labelled placeholders. No AI service, database, or Node.js installation is needed.
+A focused reasoning-practice app built with Flask and vanilla JavaScript. Dice Folding and Dice Unfolding are procedural; the remaining subtypes still use labelled placeholders. No AI service, database, or Node.js installation is needed.
 
 ## Run locally
 
@@ -18,7 +18,14 @@ Open <http://127.0.0.1:5000>. On macOS/Linux, activate with `source venv/bin/act
 ```text
 app.py                    Flask routes and API validation
 data/reasoning_types.json Editable domain and subtype catalog
-generators/               Normalized question contract and placeholder adapter
+generators/               Dispatcher, reasoning-type packages, and shared placeholder adapter
+  spatial/                One package per spatial subtype
+    dice_folding/         Folding question generator
+    dice_unfolding/       Unfolding question generator
+    misc/                 Cube model and SVG figures shared by spatial subtypes
+  mechanical/             One package per mechanical subtype, plus misc/
+  verbal/                 One package per verbal subtype, plus misc/
+  misc/                   Placeholder adapter shared across reasoning types
 templates/index.html      Accessible application shell
 static/css/app.css        Structural and responsive styles
 static/css/theme.css      Lively challenge-board visual identity
@@ -28,7 +35,9 @@ tests/                    API and catalog tests
 venv/                     Project-local Python environment (ignored by Git)
 ```
 
-Edit `data/reasoning_types.json` to add or change domains and subtypes. Each subtype has a `generator_key` reserved for a future procedural module. `generators/placeholder.py` currently returns normalized question objects from the practice API; replace its implementation with a dispatcher when procedural generators are ready.
+Edit `data/reasoning_types.json` to add or change domains and subtypes. Every catalog subtype has a corresponding package under its reasoning type. The `generator_key` dispatches the two dice subtypes to dedicated modules; other keys use `generators/misc/placeholder.py` until their generators are implemented. The dice setup offers Mixed, Shapes/Polygons, Dice Dots, Characters, and Abstract Structures face markings. Both dice generators share `generators/spatial/misc/cube_model.py`, which enumerates the eleven cube-net topologies, folds nets with 3D orientation bases, and checks choices against all 24 rigid cube rotations. Each question's metadata records the cube faces, markings, opposite and adjacent pairs, option validity, proof rotation, and any violated constraint.
+
+Shapes/Polygons uses six regular polygons with three through eight sides and no extra marks. Characters displays only the chosen letters, numbers, or symbols. Marking symmetries are included in answer validation.
 
 ## Question and figure data
 
@@ -52,8 +61,10 @@ Images must come from the app origin or a `data:image/png`, `image/jpeg`, or `im
 
 Hover over a figure, then use its Inspect button to open the viewer. On touch screens, the button stays visible. The viewer supports mouse wheel, touch pinch, drag, keyboard `+`/`-`, arrow keys, `0`/Home, and Escape. The PNG control downloads one figure, or all figures in its question or choice block as one image in display order.
 
+Clicking or tapping a choice figure selects that choice. Submit answer checks the current item, shows Correct or Incorrect with its explanation, and locks that answer. Submitted results remain visible when revisiting an item. Only submitted answers count toward the final score.
+
 The interface uses hash routes, so refreshing a menu or setup URL retains its context. An in-progress practice session stays in memory; refreshing it returns to setup. Setup values are saved locally in the browser. Leaving an active session asks for confirmation.
 
 ## Checks
 
-`python -m unittest discover -s tests -p test_app.py` checks catalog consistency and API validation. The optional browser workflow checks require `pip install playwright`, an installed Playwright Chromium browser, and a running local server; then run `python tests/browser_check.py` and `python tests/figure_check.py`.
+`python -m unittest discover -s tests -p "test_*.py"` checks the catalog, API, cube geometry, and generated answer uniqueness. The optional browser workflow checks require `pip install playwright`, an installed Playwright Chromium browser, and a running local server; then run `python tests/browser_check.py`, `python tests/figure_check.py`, and `python tests/spatial_browser_check.py`.

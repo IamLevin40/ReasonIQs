@@ -10,9 +10,12 @@ class ReasonIQsApiTests(unittest.TestCase):
 
     def test_catalog_relationships_and_assets(self):
         catalog = load_catalog()
+        generator_root = Path(__file__).resolve().parents[1] / "generators"
+        self.assertTrue((generator_root / "misc" / "placeholder.py").is_file())
         self.assertEqual({item["id"] for item in catalog["types"]}, {"mechanical", "spatial", "verbal"})
         all_ids = set()
         for reasoning_type in catalog["types"]:
+            self.assertTrue((generator_root / reasoning_type["id"] / "misc" / "__init__.py").is_file())
             self.assertGreaterEqual(len(reasoning_type["subtypes"]), 6)
             self.assertTrue((Path(__file__).resolve().parents[1] / reasoning_type["icon"].lstrip("/")).is_file())
             for subtype in reasoning_type["subtypes"]:
@@ -21,6 +24,8 @@ class ReasonIQsApiTests(unittest.TestCase):
                 self.assertEqual(subtype["parent_id"], reasoning_type["id"])
                 self.assertEqual(subtype["difficulties"], ["Easy", "Average", "Challenge"])
                 self.assertTrue((Path(__file__).resolve().parents[1] / subtype["icon"].lstrip("/")).is_file())
+                package = generator_root / reasoning_type["id"] / subtype["id"].replace("-", "_")
+                self.assertTrue((package / "__init__.py").is_file(), package)
 
     def test_practice_respects_item_and_choice_counts(self):
         for domain in load_catalog()["types"]:

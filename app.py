@@ -7,7 +7,8 @@ from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
 
-from generators.placeholder import generate_placeholder_session
+from generators import generate_session
+from generators.spatial.misc.cube_figures import THEMES
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "data" / "reasoning_types.json"
@@ -87,6 +88,7 @@ def create_practice():
     timer_enabled = payload.get("timer_enabled")
     seconds_per_item = payload.get("seconds_per_item")
     difficulty = payload.get("difficulty")
+    theme = payload.get("theme", "Mixed")
     if not isinstance(item_count, int) or isinstance(item_count, bool) or not 5 <= item_count <= 50:
         return error_response("Choose between 5 and 50 items.", 400)
     if not isinstance(choice_count, int) or isinstance(choice_count, bool) or not 2 <= choice_count <= 6:
@@ -97,9 +99,11 @@ def create_practice():
         return error_response("Choose a timer duration between 10 and 300 seconds.", 400)
     if difficulty not in ("Easy", "Average", "Challenge") or difficulty not in subtype.get("difficulties", []):
         return error_response("Choose an available difficulty.", 400)
+    if subtype["generator_key"] in ("spatial.dice_folding", "spatial.dice_unfolding") and theme not in ("Mixed", *THEMES):
+        return error_response("Choose an available cube marking theme.", 400)
 
-    questions = generate_placeholder_session(type_id, subtype, difficulty, item_count, choice_count)
-    return jsonify({"questions": questions, "placeholder": True})
+    questions = generate_session(type_id, subtype, difficulty, item_count, choice_count, theme)
+    return jsonify({"questions": questions, "placeholder": all(question["metadata"].get("placeholder", False) for question in questions)})
 
 
 if __name__ == "__main__":

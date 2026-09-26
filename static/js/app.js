@@ -115,15 +115,30 @@ function complete() {
 }
 
 function requestCompletion() {
-  const unanswered = state.answers.filter(answer => !answer).length;
-  if (unanswered > 0 && !window.confirm(`Finish with ${unanswered} unanswered ${unanswered === 1 ? "item" : "items"}?`)) return;
+  const unsubmitted = state.submitted.filter(value => !value).length;
+  if (unsubmitted > 0 && !window.confirm(`Finish with ${unsubmitted} unsubmitted ${unsubmitted === 1 ? "item" : "items"}? Only submitted answers count toward your score.`)) return;
   complete();
+}
+
+function submitAnswer() {
+  const index = state.index;
+  if (state.submitted[index] || state.timedOut[index]) return;
+  if (!state.answers[index]) {
+    document.querySelector("#answer-feedback").textContent = "Select an answer before submitting.";
+    announce("Select an answer before submitting.");
+    return;
+  }
+  state.submitted[index] = true;
+  const correct = state.answers[index] === state.questions[index].correct_answer_id;
+  renderTest();
+  document.querySelector("#answer-feedback")?.focus();
+  announce(`Question ${index + 1}: ${correct ? "correct" : "incorrect"}.`);
 }
 
 function tick(elapsed) {
   if (state.sessionStatus !== "active" || state.screen !== "test") return;
   const index = state.index;
-  if (state.timedOut[index]) return;
+  if (state.timedOut[index] || state.submitted[index]) return;
   state.remaining[index] = Math.max(0, state.remaining[index] - elapsed);
   updateTimerDisplay();
   if (state.remaining[index] > 0) return;
@@ -185,7 +200,7 @@ workspace.addEventListener("click", async event => {
   const control = event.target.closest("button");
   if (!control) {
     const choice = event.target.closest(".choice");
-    if (choice && !event.target.closest("label, .figure-card") && state.screen === "test") {
+    if (choice && !event.target.closest("label") && state.screen === "test") {
       const radio = choice.querySelector('input[name="answer"]');
       if (radio && !radio.disabled) radio.click();
     }
@@ -201,6 +216,7 @@ workspace.addEventListener("click", async event => {
     if (state.index === state.questions.length - 1) requestCompletion();
     else setQuestion(state.index + 1);
   }
+  else if (control.dataset.action === "submit-answer") submitAnswer();
   else if (control.dataset.action === "submit") requestCompletion();
   else if (control.dataset.action === "restart") {
     startPractice();
@@ -222,6 +238,8 @@ function syncConfig(event) {
     state.config.timer_enabled = input.checked;
   } else if (input.name === "difficulty" && input.checked) {
     state.config.difficulty = input.value;
+  } else if (input.name === "theme") {
+    state.config.theme = input.value;
   }
   saveConfig();
   updateSetup();
@@ -229,14 +247,14 @@ function syncConfig(event) {
 workspace.addEventListener("input", syncConfig);
 workspace.addEventListener("change", event => {
   syncConfig(event);
-  if (event.target.name !== "answer" || state.screen !== "test" || state.timedOut[state.index]) return;
+  if (event.target.name !== "answer" || state.screen !== "test" || state.timedOut[state.index] || state.submitted[state.index]) return;
   state.answers[state.index] = event.target.value;
   const current = state.index;
   const dot = document.querySelector(`.nav-dot[data-question="${current}"]`);
-  dot?.classList.add("answered");
-  dot?.setAttribute("aria-label", `Question ${current + 1}, answered`);
-  const status = document.querySelector(".test-header p");
-  if (status) status.textContent = `${state.answers.filter(Boolean).length} answered · ${state.timedOut.filter(Boolean).length} timed out`;
+  dot?.classList.add("selected");
+  dot?.setAttribute("aria-label", `Question ${current + 1}, selected`);
+  const feedback = document.querySelector("#answer-feedback");
+  if (feedback) feedback.textContent = "";
   announce(`Answer selected for question ${current + 1}.`);
 });
 

@@ -46,7 +46,7 @@ def check():
         assert page.locator(".choice input:checked").count() == 0
         page.locator(".choice-figures .figure-surface").first.click()
         assert page.get_by_role("dialog").count() == 0
-        assert page.locator(".choice input:checked").count() == 0
+        assert page.locator(".choice input").first.is_checked()
         inspect = page.locator(".choice-figures .figure-inspect").first
         inspect.focus()
         page.wait_for_function("getComputedStyle(document.querySelector('.choice-figures .figure-actions')).opacity === '1'")
@@ -54,6 +54,7 @@ def check():
         page.keyboard.press("Enter")
         assert page.get_by_role("dialog").is_visible()
         page.keyboard.press("Escape")
+        assert page.locator(".choice input").first.is_checked()
 
         with page.expect_download() as merged_event:
             page.locator(".question-figures .figure-export").first.click()
@@ -128,6 +129,8 @@ def check():
         touch_page.get_by_role("button", name="Mechanical Reasoning:").tap()
         touch_page.get_by_role("button", name="Gears & Rotation:").tap()
         touch_page.get_by_role("button", name="Start practice").tap()
+        touch_page.locator(".choice-figures .figure-surface").first.tap()
+        assert touch_page.locator(".choice input").first.is_checked()
         export = touch_page.locator(".question-figures .figure-export").first
         assert export.evaluate("element => getComputedStyle(element).opacity") == "1"
         touch_page.locator(".question-figures .figure-surface").first.tap()

@@ -1,6 +1,15 @@
-"""Procedural question generators will live here.
+"""Dispatch normalized ReasonIQs questions to procedural generators."""
 
-Future entry point: generate_question(reasoning_type, subtype, difficulty,
-choice_count) -> normalized question dict. Dispatch by subtype['generator_key'].
-The API and frontend should not need to change when replacing placeholders.
-"""
+from generators.misc.placeholder import generate_placeholder_session
+
+
+def generate_session(type_id: str, subtype: dict, difficulty: str, item_count: int, choice_count: int,
+                     theme: str = "Mixed") -> list[dict]:
+    key = subtype["generator_key"]
+    if key == "spatial.dice_folding":
+        from generators.spatial.dice_folding.generator import generate_question
+    elif key == "spatial.dice_unfolding":
+        from generators.spatial.dice_unfolding.generator import generate_question
+    else:
+        return generate_placeholder_session(type_id, subtype, difficulty, item_count, choice_count)
+    return [generate_question(type_id, subtype, difficulty, choice_count, index + 1, theme) for index in range(item_count)]

@@ -1,5 +1,6 @@
 const STORAGE_KEY = "reasoniqs.setup.v1";
-const defaults = { item_count: 10, choice_count: 4, timer_enabled: false, seconds_per_item: 45, difficulty: "Average" };
+export const cubeThemes = ["Mixed", "Shapes/Polygons", "Dice Dots", "Characters", "Abstract Structures"];
+const defaults = { item_count: 10, choice_count: 4, timer_enabled: false, seconds_per_item: 45, difficulty: "Average", theme: "Mixed" };
 
 function loadConfig() {
   try {
@@ -19,6 +20,7 @@ export const state = {
   questions: [],
   index: 0,
   answers: [],
+  submitted: [],
   timedOut: [],
   remaining: [],
   sessionStatus: "idle",
@@ -44,6 +46,7 @@ export function validateConfig(subtype = state.subtype) {
   if (typeof config.timer_enabled !== "boolean") return "Choose whether to use an item timer.";
   if (!Number.isInteger(config.seconds_per_item) || config.seconds_per_item < 10 || config.seconds_per_item > 300) return "Choose a timer duration between 10 and 300 seconds.";
   if (!["Easy", "Average", "Challenge"].includes(config.difficulty) || !subtype?.difficulties.includes(config.difficulty)) return "Choose an available difficulty.";
+  if (["spatial.dice_folding", "spatial.dice_unfolding"].includes(subtype?.generator_key) && !cubeThemes.includes(config.theme)) return "Choose an available cube marking theme.";
   return "";
 }
 
@@ -51,6 +54,7 @@ export function beginSession(questions) {
   state.questions = questions;
   state.index = 0;
   state.answers = Array(questions.length).fill(null);
+  state.submitted = Array(questions.length).fill(false);
   state.timedOut = Array(questions.length).fill(false);
   state.remaining = Array(questions.length).fill(state.config.seconds_per_item);
   state.sessionStatus = "active";
@@ -59,10 +63,10 @@ export function beginSession(questions) {
 
 export function finishSession() {
   state.sessionStatus = "complete";
-  const answered = state.answers.filter(Boolean).length;
+  const answered = state.submitted.filter(Boolean).length;
   const timedOut = state.timedOut.filter(Boolean).length;
   const correct = state.questions.reduce((total, question, index) =>
-    total + Number(state.answers[index] === question.correct_answer_id), 0);
+    total + Number(state.submitted[index] && state.answers[index] === question.correct_answer_id), 0);
   state.result = {
     answered, timedOut, unanswered: state.questions.length - answered,
     correct, total: state.questions.length
