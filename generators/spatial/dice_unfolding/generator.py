@@ -35,7 +35,7 @@ def question_views(source: Cube, difficulty: str, rng: random.Random) -> tuple[l
 
 
 def altered_net_cube(source: Cube, visible_ids: set[str], rng: random.Random,
-                     symmetric: dict[str, int], theme: str) -> tuple[Cube, str] | None:
+                     symmetric: dict[str, int], markings: dict[str, dict]) -> tuple[Cube, str] | None:
     changed = dict(source)
     visible_normals = [normal for normal, face in source.items() if face.identity in visible_ids]
     operation = rng.choice(("swap", "swap", "rotation", "mirror", "opposites"))
@@ -48,9 +48,8 @@ def altered_net_cube(source: Cube, visible_ids: set[str], rng: random.Random,
         changed[normal] = Face(face.identity, turn_up(face.mark_up, normal, 1))
         return changed, "An observed marking is rotated inconsistently with the cube view."
     if operation == "mirror":
-        if theme == "Shapes/Polygons":
-            return None
-        candidates = [n for n in visible_normals if symmetric[source[n].identity] == 1]
+        candidates = [n for n in visible_normals if symmetric[source[n].identity] == 1
+                      and markings[source[n].identity].get("mirrorable", False)]
         if not candidates:
             return None
         normal = rng.choice(candidates)
@@ -99,7 +98,7 @@ def generate_question(type_id: str, subtype: dict, difficulty: str, choice_count
             if valid:
                 candidate, violation = source, None
             else:
-                altered = altered_net_cube(source, visible_ids, rng, symmetries, theme)
+                altered = altered_net_cube(source, visible_ids, rng, symmetries, markings)
                 if altered is None:
                     continue
                 candidate, violation = altered

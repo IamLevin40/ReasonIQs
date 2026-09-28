@@ -21,7 +21,7 @@ def visible_signature(cube: Cube, symmetric: dict[str, int]) -> tuple:
     return tuple(result)
 
 
-def altered_cube(base: Cube, rng: random.Random, symmetric: dict[str, int], theme: str) -> tuple[Cube, str] | None:
+def altered_cube(base: Cube, rng: random.Random, symmetric: dict[str, int], markings: dict[str, dict]) -> tuple[Cube, str] | None:
     normal_a, normal_b = rng.sample((Y, Z, X), 2)
     mutation = rng.choice(("opposites", "face swap", "mark rotation", "mark mirror"))
     changed = dict(base)
@@ -42,7 +42,7 @@ def altered_cube(base: Cube, rng: random.Random, symmetric: dict[str, int], them
         reason = "A directional face marking has the wrong rotation for this fold."
     else:
         face = changed[normal_a]
-        if symmetric[face.identity] != 1 or theme == "Shapes/Polygons":
+        if symmetric[face.identity] != 1 or not markings[face.identity].get("mirrorable", False):
             return None
         changed[normal_a] = Face(face.identity, face.mark_up, True)
         reason = "A face marking is mirrored, which no rigid cube rotation can produce."
@@ -69,7 +69,7 @@ def generate_question(type_id: str, subtype: dict, difficulty: str, choice_count
             if valid:
                 candidate, violation = base, None
             else:
-                altered = altered_cube(base, rng, symmetries, theme)
+                altered = altered_cube(base, rng, symmetries, markings)
                 if altered is None:
                     continue
                 candidate, violation = altered
