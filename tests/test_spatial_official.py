@@ -20,7 +20,7 @@ from generators.spatial.misc.geometry import STRUCTURE_PALETTES, choose_structur
 
 CATALOG = json.loads((Path(__file__).resolve().parents[1] / "data/reasoning_types.json").read_text())
 SPATIAL = next(item for item in CATALOG["types"] if item["id"] == "spatial")
-NEW = SPATIAL["subtypes"][2:]
+NEW = SPATIAL["subtypes"][2:6]
 
 
 class OfficialSpatialTests(unittest.TestCase):
@@ -75,7 +75,8 @@ class OfficialSpatialTests(unittest.TestCase):
     def test_catalog_replaces_temporary_spatial_entries(self):
         self.assertEqual([item["generator_key"] for item in SPATIAL["subtypes"]], [
             "spatial.dice_folding", "spatial.dice_unfolding", "spatial.cube_counting",
-            "spatial.perspective_viewing", "spatial.blocks_forming", "spatial.jigsaw_forming"])
+            "spatial.perspective_viewing", "spatial.blocks_forming", "spatial.jigsaw_forming",
+            "spatial.pattern_finding"])
 
     def test_exact_answers_and_figure_data(self):
         for subtype in NEW:

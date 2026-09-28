@@ -1,4 +1,4 @@
-import { state, validateConfig, cubeThemes } from "./state.js";
+import { state, validateConfig, cubeThemes, puzzleTypes } from "./state.js";
 import { renderQuestionContent } from "./question-renderer.js";
 import { mountFigures } from "./figures.js";
 import { closeFigureInspector } from "./figure-inspector.js";
@@ -64,6 +64,7 @@ export function renderSubtypes() {
 export function renderSetup() {
   const config = state.config;
   const diceSubtype = ["spatial.dice_folding", "spatial.dice_unfolding"].includes(subtype().generator_key);
+  const patternSubtype = subtype().generator_key === "spatial.pattern_finding";
   shell(`${context([{ label: "Home", path: "/" }, { label: type().title, path: `/type/${type().id}` }, { label: subtype().title }])}
     <button class="back-link" type="button" data-route="/type/${attr(type().id)}"><span aria-hidden="true">←</span> All ${escapeHtml(type().title)} topics</button>
     <section class="setup-intro"><div><p class="eyebrow">Build your round / Step 03</p><h1>Set your practice pace.</h1><p class="lead">A few choices before you begin ${escapeHtml(subtype().title)}.</p></div><span class="setup-badge" aria-hidden="true">✦<small>READY<br>SET<br>THINK</small></span></section>
@@ -78,10 +79,11 @@ export function renderSetup() {
         <hr class="field-divider">
         <fieldset class="difficulty-group"><legend>Difficulty</legend><div class="segmented">${["Easy", "Average", "Challenge"].map(level => `<label class="segment"><input type="radio" name="difficulty" value="${level}" ${config.difficulty === level ? "checked" : ""} ${subtype().difficulties.includes(level) ? "" : "disabled"}><span>${level}</span></label>`).join("")}</div></fieldset>
         ${diceSubtype ? `<div class="field-row"><div class="field-copy"><label for="cube-theme">Face markings</label><small>All themes work without color clues</small></div><select class="field-control theme-control" id="cube-theme" name="theme">${cubeThemes.map(theme => `<option value="${attr(theme)}" ${config.theme === theme ? "selected" : ""}>${escapeHtml(theme)}</option>`).join("")}</select></div>` : ""}
+        ${patternSubtype ? `<div class="field-row"><div class="field-copy"><label for="puzzle-type">Puzzle type</label><small>Mixed balances Linear and Matrix questions</small></div><select class="field-control theme-control" id="puzzle-type" name="puzzle_type">${puzzleTypes.map(value => `<option value="${attr(value)}" ${config.puzzle_type === value ? "selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select></div>` : ""}
       </div><p class="validation" id="setup-error" role="status"></p>
     </form>
     <aside class="panel summary-panel" aria-label="Session summary" ${style(type())}><p class="small-heading">Your round at a glance</p><div class="summary-identity"><span class="summary-icon"><img src="${icon(type())}" alt="" data-icon></span><span><strong>${escapeHtml(subtype().title)}</strong><small>${escapeHtml(type().title)}</small></span></div>
-    <dl class="summary-list"><div><dt>Items</dt><dd id="summary-items"></dd></div><div><dt>Choices</dt><dd id="summary-choices"></dd></div><div><dt>Difficulty</dt><dd id="summary-difficulty"></dd></div>${diceSubtype ? '<div><dt>Markings</dt><dd id="summary-theme"></dd></div>' : ""}<div><dt>Timer</dt><dd id="summary-timer"></dd></div></dl>
+    <dl class="summary-list"><div><dt>Items</dt><dd id="summary-items"></dd></div><div><dt>Choices</dt><dd id="summary-choices"></dd></div><div><dt>Difficulty</dt><dd id="summary-difficulty"></dd></div>${diceSubtype ? '<div><dt>Markings</dt><dd id="summary-theme"></dd></div>' : ""}${patternSubtype ? '<div><dt>Puzzle type</dt><dd id="summary-puzzle-type"></dd></div>' : ""}<div><dt>Timer</dt><dd id="summary-timer"></dd></div></dl>
     <p class="summary-line" id="summary-line" aria-live="polite"></p>
     <button class="btn btn-primary btn-full" id="start-button" type="submit" form="setup-form">Start practice <span aria-hidden="true">→</span></button></aside></div>`);
   updateSetup();
@@ -98,6 +100,7 @@ export function updateSetup() {
   document.querySelector("#summary-choices").textContent = Number.isFinite(config.choice_count) ? config.choice_count : "—";
   document.querySelector("#summary-difficulty").textContent = config.difficulty;
   if (document.querySelector("#summary-theme")) document.querySelector("#summary-theme").textContent = config.theme;
+  if (document.querySelector("#summary-puzzle-type")) document.querySelector("#summary-puzzle-type").textContent = config.puzzle_type;
   document.querySelector("#summary-timer").textContent = config.timer_enabled ? `${config.seconds_per_item} sec/item` : "Off";
   document.querySelector("#summary-line").textContent = `${config.item_count || "—"} items · ${config.choice_count || "—"} choices · ${config.difficulty} · ${config.timer_enabled ? `${config.seconds_per_item} sec/item` : "untimed"}`;
   document.querySelector("#setup-error").textContent = error;

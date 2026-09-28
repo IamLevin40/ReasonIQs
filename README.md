@@ -1,6 +1,6 @@
 # ReasonIQs
 
-A focused reasoning-practice app built with Flask and vanilla JavaScript. Dice Folding and Dice Unfolding are procedural; the remaining subtypes still use labelled placeholders. No AI service, database, or Node.js installation is needed.
+A focused reasoning-practice app built with Flask and vanilla JavaScript. The spatial subtypes, including Pattern Finding, use procedural generators; mechanical and verbal subtypes still use labelled placeholders. No AI service, database, or Node.js installation is needed.
 
 ## Run locally
 
@@ -22,6 +22,7 @@ generators/               Dispatcher, reasoning-type packages, and shared placeh
   spatial/                One package per spatial subtype
     dice_folding/         Folding question generator
     dice_unfolding/       Unfolding question generator
+    pattern_finding/      Rule engine, inference validator, distractors, and SVG renderer
     misc/                 Cube model and SVG figures shared by spatial subtypes
   mechanical/             One package per mechanical subtype, plus misc/
   verbal/                 One package per verbal subtype, plus misc/
@@ -35,7 +36,9 @@ tests/                    API and catalog tests
 venv/                     Project-local Python environment (ignored by Git)
 ```
 
-Edit `data/reasoning_types.json` to add or change domains and subtypes. Every catalog subtype has a corresponding package under its reasoning type. The `generator_key` dispatches the two dice subtypes to dedicated modules; other keys use `generators/misc/placeholder.py` until their generators are implemented. The dice setup offers Mixed, Shapes/Polygons, Dice Dots, Characters, and Abstract Structures face markings. Both dice generators share `generators/spatial/misc/cube_model.py`, which enumerates the eleven cube-net topologies, folds nets with 3D orientation bases, and checks choices against all 24 rigid cube rotations. Each question's metadata records the cube faces, markings, opposite and adjacent pairs, option validity, proof rotation, and any violated constraint.
+Edit `data/reasoning_types.json` to add or change domains and subtypes. Spatial generator keys dispatch to dedicated modules; mechanical and verbal keys use `generators/misc/placeholder.py` until their generators are implemented. The dice setup offers Mixed, Shapes/Polygons, Dice Dots, Characters, and Abstract Structures face markings. Both dice generators share `generators/spatial/misc/cube_model.py`, which enumerates the eleven cube-net topologies, folds nets with 3D orientation bases, and checks choices against all 24 rigid cube rotations. Each question's metadata records the cube faces, markings, opposite and adjacent pairs, option validity, proof rotation, and any violated constraint.
+
+Pattern Finding selects declarative attribute rules, builds every structured cell, hides one cell, and derives rule-aware distractors. Its Puzzle type setting offers Linear, Matrix, and Mixed; Mixed alternates Linear and Matrix questions so their counts differ by at most one. Matrix is one continuous sequence in reading order: after cell 3, cell 4 begins the next row, and after cell 6, cell 7 begins the final row. Each boxed figure has invisible 3×3 position anchors, and all figures use monochrome SVG. Question metadata records the complete generated states, active rules, missing cell, derivation, and each distractor's error. The shared figure viewer provides zoom, focus, and PNG download for these SVGs.
 
 Shapes/Polygons uses six regular polygons with three through eight sides and no extra marks. Characters displays only the chosen letters, numbers, or symbols. Marking symmetries are included in answer validation.
 

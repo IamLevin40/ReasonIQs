@@ -240,6 +240,8 @@ function syncConfig(event) {
     state.config.difficulty = input.value;
   } else if (input.name === "theme") {
     state.config.theme = input.value;
+  } else if (input.name === "puzzle_type") {
+    state.config.puzzle_type = input.value;
   }
   saveConfig();
   updateSetup();

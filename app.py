@@ -89,6 +89,7 @@ def create_practice():
     seconds_per_item = payload.get("seconds_per_item")
     difficulty = payload.get("difficulty")
     theme = payload.get("theme", "Mixed")
+    puzzle_type = payload.get("puzzle_type", "Mixed")
     if not isinstance(item_count, int) or isinstance(item_count, bool) or not 5 <= item_count <= 50:
         return error_response("Choose between 5 and 50 items.", 400)
     if not isinstance(choice_count, int) or isinstance(choice_count, bool) or not 2 <= choice_count <= 6:
@@ -101,8 +102,10 @@ def create_practice():
         return error_response("Choose an available difficulty.", 400)
     if subtype["generator_key"] in ("spatial.dice_folding", "spatial.dice_unfolding") and theme not in ("Mixed", *THEMES):
         return error_response("Choose an available cube marking theme.", 400)
+    if subtype["generator_key"] == "spatial.pattern_finding" and puzzle_type not in ("Linear", "Matrix", "Mixed"):
+        return error_response("Choose an available puzzle type.", 400)
 
-    questions = generate_session(type_id, subtype, difficulty, item_count, choice_count, theme)
+    questions = generate_session(type_id, subtype, difficulty, item_count, choice_count, theme, puzzle_type)
     return jsonify({"questions": questions, "placeholder": all(question["metadata"].get("placeholder", False) for question in questions)})
 
 
