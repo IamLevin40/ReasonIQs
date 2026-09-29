@@ -76,7 +76,7 @@ class OfficialSpatialTests(unittest.TestCase):
         self.assertEqual([item["generator_key"] for item in SPATIAL["subtypes"]], [
             "spatial.dice_folding", "spatial.dice_unfolding", "spatial.cube_counting",
             "spatial.perspective_viewing", "spatial.blocks_forming", "spatial.jigsaw_forming",
-            "spatial.pattern_finding"])
+            "spatial.pattern_finding", "spatial.which_does_not_belong"])
 
     def test_exact_answers_and_figure_data(self):
         for subtype in NEW:
