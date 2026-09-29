@@ -36,30 +36,33 @@ export function renderError(message, retry = true) {
 export function renderHome() {
   const domains = state.catalog.types;
   const activeCount = domains.filter(item => item.active).length;
-  const pathCount = domains.reduce((total, item) => total + (item.subtypes || []).filter(entry => entry.active).length, 0);
+  const pathCount = domains.reduce((total, item) => total + (item.active ? (item.subtypes || []).filter(entry => entry.active).length : 0), 0);
   shell(`<section class="play-hero" aria-labelledby="home-heading">
     <div class="hero-copy"><p class="hero-kicker"><span class="sparkle" aria-hidden="true">✦</span> REASONIQS PRACTICE LAB</p>
       <h1 id="home-heading">Give your brain<br><em>a new angle.</em></h1>
-      <p>Practice the patterns behind IQ tests. Choose a reasoning world and make a round your own.</p>
-      <div class="hero-facts"><span><strong>${activeCount.toString().padStart(2, "0")}</strong> worlds to explore</span><span><strong>${pathCount.toString().padStart(2, "0")}</strong> practice paths</span></div>
+      <p>Practice the patterns behind IQ tests. Choose a reasoning area and make a round your own.</p>
+      <div class="hero-facts"><span><strong>${activeCount.toString().padStart(2, "0")}</strong> reasoning areas</span><span><strong>${pathCount.toString().padStart(2, "0")}</strong> practice topics</span></div>
     </div>
     <div class="hero-puzzle" aria-hidden="true"><span class="puzzle-cell"><i class="puzzle-shape circle"></i></span><span class="puzzle-cell"><i class="puzzle-shape square"></i></span><span class="puzzle-cell"><i class="puzzle-shape triangle"></i></span><span class="puzzle-cell"><i class="puzzle-shape square"></i></span><span class="puzzle-cell"><i class="puzzle-shape triangle"></i></span><span class="puzzle-cell"><i class="puzzle-shape circle"></i></span><span class="puzzle-cell"><i class="puzzle-shape triangle"></i></span><span class="puzzle-cell"><i class="puzzle-shape circle"></i></span><span class="puzzle-cell puzzle-mystery">?</span></div>
     </section>
-    <section class="domain-section" aria-labelledby="domain-heading"><div class="section-head"><div><p class="eyebrow">Start your round</p><h2 id="domain-heading">Choose a reasoning world</h2></div><span class="section-aside">Pick one to see its topics <span aria-hidden="true">↘</span></span></div>
-    <div class="domain-grid">${domains.map((item, i) => `<button class="domain" ${style(item)} type="button" data-type="${attr(item.id)}" ${item.active ? "" : "disabled aria-disabled=\"true\""} aria-label="${attr(item.title)}: ${attr(item.subtitle)}${item.active ? "" : ", unavailable"}">
-      <span class="domain-top"><span class="domain-index">WORLD ${String(i + 1).padStart(2, "0")}</span><span class="domain-spark" aria-hidden="true">✳</span></span>
+    <section class="domain-section" aria-labelledby="domain-heading"><div class="section-head"><div><p class="eyebrow">Start your round</p><h2 id="domain-heading">Choose a reasoning area</h2></div><span class="section-aside">Pick one to see its topics <span aria-hidden="true">↘</span></span></div>
+    <div class="domain-grid">${domains.map((item, i) => `<button class="domain" ${style(item)} type="button" data-type="${attr(item.id)}" ${item.active ? "" : "disabled aria-disabled=\"true\""} aria-label="${attr(item.title)}: ${attr(item.subtitle)}${!item.active ? ", unavailable" : (item.subtypes || []).some(entry => entry.active) ? "" : ", topics coming soon"}">
+      <span class="domain-top"><span class="domain-index">AREA ${String(i + 1).padStart(2, "0")}</span><span class="domain-spark" aria-hidden="true">✳</span></span>
       <span class="domain-symbol"><img src="${icon(item)}" alt="" loading="lazy" data-icon></span>
       <span class="domain-title">${escapeHtml(item.title)}</span><span class="domain-subtitle">${escapeHtml(item.subtitle)}</span>
-      <span class="domain-foot"><span>${item.active ? `${(item.subtypes || []).filter(entry => entry.active).length} topics to explore` : "Unavailable"}</span><span class="domain-go" aria-hidden="true">↗</span></span></button>`).join("")}</div></section>`);
+      <span class="domain-foot"><span>${!item.active ? "Unavailable" : (item.subtypes || []).some(entry => entry.active) ? `${item.subtypes.filter(entry => entry.active).length} topics to explore` : "Topics coming soon"}</span><span class="domain-go" aria-hidden="true">↗</span></span></button>`).join("")}</div></section>`);
 }
 export function renderSubtypes() {
   const item = type();
+  const available = (item.subtypes || []).filter(entry => entry.active);
+  const alternative = state.catalog.types.find(other => other.id !== item.id && other.active && (other.subtypes || []).some(entry => entry.active));
   shell(`${context([{ label: "Home", path: "/" }, { label: item.title }])}
-    <button class="back-link" type="button" data-route="/"><span aria-hidden="true">←</span> All reasoning domains</button>
-    <section class="chapter-banner" ${style(item)}><div><p class="eyebrow">Choose your focus / World ${String(state.catalog.types.indexOf(item) + 1).padStart(2, "0")}</p><h1>${escapeHtml(item.title)}</h1><p class="lead">${escapeHtml(item.description || item.subtitle)}</p></div><span class="chapter-emblem"><img src="${icon(item)}" alt="" data-icon></span></section>
-    <section aria-labelledby="subtype-heading"><div class="section-head"><div><p class="eyebrow">Next step</p><h2 id="subtype-heading">Pick a practice path</h2></div><span class="section-aside">${(item.subtypes || []).filter(entry => entry.active).length} topics available</span></div>
-    <div class="subtype-grid">${(item.subtypes || []).map((entry, i) => `<button class="subtype" ${style(item)} type="button" data-subtype="${attr(entry.id)}" ${entry.active ? "" : "disabled aria-disabled=\"true\""} aria-label="${attr(entry.title)}: ${attr(entry.subtitle)}${entry.active ? "" : ", unavailable"}">
-      <span class="subtype-number">${String(i + 1).padStart(2, "0")}</span><span class="subtype-icon"><img src="${icon(entry)}" alt="" loading="lazy" data-icon></span><span class="subtype-copy"><span class="subtype-title">${escapeHtml(entry.title)}</span><span class="subtype-subtitle">${escapeHtml(entry.subtitle)}</span><span class="subtype-status">${entry.active ? "READY TO PRACTICE" : "UNAVAILABLE"}</span></span><span class="subtype-go" aria-hidden="true">↗</span></button>`).join("")}</div></section>`);
+    <button class="back-link" type="button" data-route="/"><span aria-hidden="true">&larr;</span> Back to reasoning areas</button>
+    <section class="chapter-banner" ${style(item)}><div><p class="eyebrow">Choose your focus</p><h1>${escapeHtml(item.title)}</h1><p class="lead">${escapeHtml(item.description || item.subtitle)}</p></div><span class="chapter-emblem"><img src="${icon(item)}" alt="" data-icon></span></section>
+    <section aria-labelledby="subtype-heading"><div class="section-head"><div><p class="eyebrow">Next step</p><h2 id="subtype-heading">${available.length ? "Choose a practice topic" : "Practice topics are coming soon"}</h2></div><span class="section-aside">${available.length ? `${available.length} topics available` : "More to explore soon"}</span></div>
+    ${available.length ? `<div class="subtype-grid">${available.map((entry, i) => `<button class="subtype" ${style(item)} type="button" data-subtype="${attr(entry.id)}" aria-label="${attr(entry.title)}: ${attr(entry.subtitle)}">
+      <span class="subtype-number">${String(i + 1).padStart(2, "0")}</span><span class="subtype-icon"><img src="${icon(entry)}" alt="" loading="lazy" data-icon></span><span class="subtype-copy"><span class="subtype-title">${escapeHtml(entry.title)}</span><span class="subtype-subtitle">${escapeHtml(entry.subtitle)}</span><span class="subtype-status">READY TO PRACTICE</span></span><span class="subtype-go" aria-hidden="true">&nearr;</span></button>`).join("")}</div>`
+      : `<div class="panel empty-topics" role="status"><span class="empty-topics-icon" aria-hidden="true">*</span><h3>Nothing to choose just yet</h3><p>We're preparing ${escapeHtml(item.title.toLowerCase())} practice topics.${alternative ? ` You can try ${escapeHtml(alternative.title.toLowerCase())} now.` : " Please check back soon."}</p><button class="btn btn-primary" type="button" data-route="${alternative ? `/type/${attr(alternative.id)}` : "/"}">${alternative ? `Explore ${escapeHtml(alternative.title.toLowerCase())} topics` : "Back to reasoning areas"} <span aria-hidden="true">&rarr;</span></button></div>`}</section>`);
 }
 export function renderSetup() {
   const config = state.config;
@@ -68,7 +71,7 @@ export function renderSetup() {
   const fittingSubtype = subtype().generator_key === "spatial.pattern_fitting";
   const regionModes = fittingSubtype ? patternFittingModes : puzzleTypes;
   shell(`${context([{ label: "Home", path: "/" }, { label: type().title, path: `/type/${type().id}` }, { label: subtype().title }])}
-    <button class="back-link" type="button" data-route="/type/${attr(type().id)}"><span aria-hidden="true">←</span> All ${escapeHtml(type().title)} topics</button>
+    <button class="back-link" type="button" data-route="/type/${attr(type().id)}"><span aria-hidden="true">←</span> Back to ${escapeHtml(type().title)} topics</button>
     <section class="setup-intro"><div><p class="eyebrow">Build your round / Step 03</p><h1>Set your practice pace.</h1><p class="lead">A few choices before you begin ${escapeHtml(subtype().title)}.</p></div><span class="setup-badge" aria-hidden="true">✦<small>READY<br>SET<br>THINK</small></span></section>
     <div class="setup-layout"><form id="setup-form" class="panel setup-panel" novalidate>
       <h2>Session settings</h2><p class="helper">Adjust these at any time before starting.</p>
@@ -123,7 +126,7 @@ export function renderTest() {
   const content = renderQuestionContent(question, state.index + 1, selected, locked, escapeHtml, submitted);
   const correct = submitted && selected === question.correct_answer_id;
   const feedback = submitted ? `<div id="answer-feedback" class="answer-feedback ${correct ? "is-correct" : "is-incorrect"}" role="status" tabindex="-1"><strong>${correct ? "Correct" : "Incorrect"}</strong>${question.explanation ? `<p>${escapeHtml(question.explanation)}</p>` : ""}</div>` : '<p id="answer-feedback" class="answer-feedback-pending" role="status"></p>';
-  shell(`<div class="test-layout"><div class="test-topline"><button class="back-link" type="button" data-route="/setup/${attr(type().id)}/${attr(subtype().id)}"><span aria-hidden="true">←</span> Leave practice</button><span class="test-meta">${escapeHtml(type().title)} / ${escapeHtml(state.config.difficulty)}</span></div>
+  shell(`<div class="test-layout"><div class="test-topline"><button class="back-link" type="button" data-route="/setup/${attr(type().id)}/${attr(subtype().id)}"><span aria-hidden="true">←</span> Leave session</button><span class="test-meta">${escapeHtml(type().title)} / ${escapeHtml(state.config.difficulty)}</span></div>
     <section class="panel test-card" aria-labelledby="question-heading"><div class="test-header"><div><span class="test-kicker">● ROUND IN PROGRESS · ${escapeHtml(subtype().title)}</span><h1 id="question-heading" tabindex="-1">Question ${state.index + 1} of ${count}</h1><p>${state.submitted.filter(Boolean).length} submitted · ${state.timedOut.filter(Boolean).length} timed out</p></div>
     ${state.config.timer_enabled && !submitted ? '<div class="timer" id="timer" role="timer"><strong id="timer-value"></strong><small>seconds left</small></div>' : ""}</div>
     <div class="progress-track" role="progressbar" aria-valuenow="${state.index + 1}" aria-valuemin="1" aria-valuemax="${count}" aria-label="Question position"><span style="width:${((state.index + 1) / count) * 100}%"></span></div>
@@ -132,7 +135,7 @@ export function renderTest() {
       ${state.timedOut[state.index] ? '<p class="timed-out-note">Time ran out for this item. You can continue through the session.</p>' : ""}
       <button class="btn btn-secondary answer-submit" type="button" data-action="submit-answer" ${locked ? "disabled" : ""}>${submitted ? "Submitted" : "Submit answer"}</button>
       ${feedback}
-    </div><div class="test-actions"><button class="btn btn-secondary" type="button" data-action="previous" ${state.index === 0 ? "disabled" : ""}>← Previous</button><div class="right-actions"><button class="btn btn-text" type="button" data-action="submit">Finish</button><button class="btn btn-primary" type="button" data-action="next">${state.index === count - 1 ? "Finish session" : "Next →"}</button></div></div></section>
+    </div><div class="test-actions"><button class="btn btn-secondary" type="button" data-action="previous" ${state.index === 0 ? "disabled" : ""}>← Previous</button><div class="right-actions"><button class="btn btn-text" type="button" data-action="submit">Finish early</button><button class="btn btn-primary" type="button" data-action="next">${state.index === count - 1 ? "Finish session" : "Next →"}</button></div></div></section>
     <nav class="navigator" aria-label="Question navigator">${state.questions.map((_, i) => `<button type="button" class="nav-dot ${i === state.index ? "current" : ""} ${state.submitted[i] ? "answered" : ""} ${state.timedOut[i] ? "timed-out" : ""} ${itemStatus(i)}" data-question="${i}" aria-label="Question ${i + 1}, ${itemStatus(i)}" ${i === state.index ? 'aria-current="step"' : ""}>${i + 1}</button>`).join("")}</nav></div>`);
   mountFigures(workspace, content.blocks);
   updateTimerDisplay();
@@ -153,5 +156,5 @@ export function renderResult() {
     <div class="result-score"><strong>${result.correct}/${result.total}</strong><span>${placeholder ? "placeholder score" : "correct answers"}</span></div>
     <div class="result-grid"><div class="result-stat"><strong>${result.answered}</strong><span>Answered</span></div><div class="result-stat"><strong>${result.unanswered}</strong><span>Unanswered</span></div><div class="result-stat"><strong>${result.timedOut}</strong><span>Timed out</span></div></div>
     ${placeholder ? '<p class="helper" style="margin:20px 0 0">This score uses temporary placeholder answers. Procedural questions and explanations will replace them later.</p>' : ""}
-    <div class="result-actions"><button class="btn btn-primary" type="button" data-action="restart">Practice again</button><button class="btn btn-secondary" type="button" data-route="/setup/${attr(type().id)}/${attr(subtype().id)}">Change settings</button><button class="btn btn-text" type="button" data-route="/type/${attr(type().id)}">Choose another focus</button></div></section></div>`);
+    <div class="result-actions"><button class="btn btn-primary" type="button" data-action="restart">Practice again</button><button class="btn btn-secondary" type="button" data-route="/setup/${attr(type().id)}/${attr(subtype().id)}">Change settings</button><button class="btn btn-text" type="button" data-route="/type/${attr(type().id)}">Choose another topic</button></div></section></div>`);
 }

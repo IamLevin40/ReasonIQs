@@ -1,7 +1,8 @@
 import { loadReasoning, createPractice } from "./api.js";
 import { state, findType, findSubtype, validateConfig, saveConfig, beginSession, finishSession, puzzleTypes, patternFittingModes } from "./state.js";
 import { startTimer, stopTimer } from "./timer.js";
-import { renderLoading, renderError, renderHome, renderSubtypes, renderSetup, updateSetup, renderTest, updateTimerDisplay, renderResult } from "./render.js";
+import { renderLoading, renderHome, renderSubtypes, renderSetup, updateSetup, renderTest, updateTimerDisplay, renderResult } from "./render.js";
+import { showDialog, hasDialog } from "./dialog.js";
 import { figureEntry, exportFigureBlock } from "./figures.js";
 import { openFigureInspector, closeFigureInspector } from "./figure-inspector.js";
 
@@ -9,6 +10,7 @@ const workspace = document.querySelector("#workspace");
 const announcer = document.querySelector("#announcer");
 let currentPath = "/";
 let loading = false;
+let preparing = false;
 
 function announce(message) {
   announcer.textContent = "";
@@ -25,6 +27,7 @@ function pathFromHash() {
 }
 
 function navigate(path) {
+  if (preparing || hasDialog()) return;
   if (location.hash === `#${path}`) {
     route();
   } else {
@@ -44,16 +47,25 @@ function selectedPath(path) {
 
 function route() {
   if (!state.catalog) return;
-  closeFigureInspector();
   const path = pathFromHash();
-  if (state.screen === "test" && state.sessionStatus === "active" && path !== currentPath) {
-    if (!window.confirm("Leave this practice session? Your current answers will be discarded.")) {
-      location.hash = currentPath;
-      return;
-    }
-    stopTimer();
-    state.sessionStatus = "idle";
+  if (preparing || hasDialog()) {
+    history.replaceState(null, "", `#${currentPath}`);
+    return;
   }
+  if (state.screen === "test" && state.sessionStatus === "active" && path !== currentPath) {
+    history.replaceState(null, "", `#${currentPath}`);
+    stopTimer();
+    showDialog({ kind: "warning", title: "Leave this session?", message: "Your answers in this session will be lost.", confirmLabel: "Leave session", cancelLabel: "Keep practicing" }).result.then(leave => {
+      if (leave) {
+        state.sessionStatus = "idle";
+        navigate(path);
+      } else if (state.screen === "test" && state.config.timer_enabled) {
+        startTimer(tick);
+      }
+    });
+    return;
+  }
+  closeFigureInspector();
   const target = selectedPath(path);
   const reasoningType = target.typeId ? findType(target.typeId) : null;
   const practiceSubtype = target.subtypeId ? findSubtype(reasoningType, target.subtypeId) : null;
@@ -95,7 +107,7 @@ async function initialize() {
     route();
   } catch (error) {
     state.screen = "error";
-    renderError(error.message);
+    showDialog({ kind: "error", title: "We couldn't open the practice areas", message: error.message, confirmLabel: "Try again" }).result.then(retry => { if (retry) initialize(); });
   } finally {
     loading = false;
   }
@@ -118,8 +130,12 @@ function complete() {
 
 function requestCompletion() {
   const unsubmitted = state.submitted.filter(value => !value).length;
-  if (unsubmitted > 0 && !window.confirm(`Finish with ${unsubmitted} unsubmitted ${unsubmitted === 1 ? "item" : "items"}? Only submitted answers count toward your score.`)) return;
-  complete();
+  if (unsubmitted === 0) { complete(); return; }
+  stopTimer();
+  showDialog({ kind: "warning", title: "Finish this session?", message: `${unsubmitted} ${unsubmitted === 1 ? "question has" : "questions have"} not been submitted. Only submitted answers count toward your score.`, confirmLabel: "Finish session", cancelLabel: "Review questions" }).result.then(finish => {
+    if (finish) complete();
+    else if (state.screen === "test" && state.config.timer_enabled) startTimer(tick);
+  });
 }
 
 function submitAnswer() {
@@ -155,35 +171,34 @@ function tick(elapsed) {
 }
 
 async function startPractice() {
+  if (preparing || hasDialog()) return;
   const error = validateConfig();
   if (error) {
     const label = document.querySelector("#setup-error");
     if (label) label.textContent = error;
-    else { navigate(`/setup/${state.type.id}/${state.subtype.id}`); }
+    else navigate(`/setup/${state.type.id}/${state.subtype.id}`);
     return;
   }
-  const button = document.querySelector("#start-button");
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Preparing practice…";
-  }
+  preparing = true;
+  const loadingDialog = showDialog({
+    kind: "loading", title: "Creating your practice session",
+    message: `Generating ${state.config.item_count} questions for ${state.subtype.title}.`, progress: true
+  });
   try {
     const data = await createPractice({
       type_id: state.type.id, subtype_id: state.subtype.id, ...state.config
     });
     if (!Array.isArray(data.questions) || data.questions.length !== state.config.item_count) throw new Error("Practice questions could not be prepared. Please retry.");
+    loadingDialog.close(true);
+    preparing = false;
     beginSession(data.questions);
     navigate(`/test/${state.type.id}/${state.subtype.id}`);
     if (state.config.timer_enabled) startTimer(tick);
     announce("Practice started. Question 1 of " + state.questions.length);
   } catch (error) {
-    const label = document.querySelector("#setup-error");
-    if (label) label.textContent = error.message;
-    else { state.screen = "error"; renderError(error.message, false); }
-    if (button) {
-      button.disabled = false;
-      button.textContent = "Start practice →";
-    }
+    loadingDialog.close(false);
+    preparing = false;
+    showDialog({ kind: "error", title: "Practice could not start", message: error.message, confirmLabel: "Back to settings" });
   }
 }
 
@@ -195,7 +210,7 @@ workspace.addEventListener("click", async event => {
     const { block, host } = figureEntry(exportButton);
     exportButton.disabled = true;
     try { await exportFigureBlock(host, block); announce(`Downloaded ${block.filename}`); }
-    catch (error) { announce(`Figure download failed: ${error.message}`); }
+    catch (error) { showDialog({ kind: "error", title: "Figure could not be downloaded", message: error.message, confirmLabel: "Close" }); }
     finally { exportButton.disabled = false; }
     return;
   }

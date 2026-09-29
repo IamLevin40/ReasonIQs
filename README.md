@@ -1,6 +1,6 @@
 # ReasonIQs
 
-A focused reasoning-practice app built with Flask and vanilla JavaScript. The spatial subtypes, including Pattern Finding, use procedural generators; mechanical and verbal subtypes still use labelled placeholders. No AI service, database, or Node.js installation is needed.
+A focused reasoning-practice app built with Flask and vanilla JavaScript. Spatial practice topics use procedural generators. Mechanical and verbal reasoning are shown as coming soon until practice topics are available. No AI service, database, or Node.js installation is needed.
 
 ## Run locally
 
@@ -39,7 +39,7 @@ tests/                    API and catalog tests
 venv/                     Project-local Python environment (ignored by Git)
 ```
 
-Edit `data/reasoning_types.json` to add or change domains and subtypes. Spatial generator keys dispatch to dedicated modules; mechanical and verbal keys use `generators/misc/placeholder.py` until their generators are implemented. The dice setup offers Mixed, Shapes/Polygons, Dice Dots, Characters, and Abstract Structures face markings. Both dice generators share `generators/spatial/misc/cube_model.py`, which enumerates the eleven cube-net topologies, folds nets with 3D orientation bases, and checks choices against all 24 rigid cube rotations. Each question's metadata records the cube faces, markings, opposite and adjacent pairs, option validity, proof rotation, and any violated constraint.
+Edit `data/reasoning_types.json` to add or change reasoning areas and practice topics. Spatial generator keys dispatch to dedicated modules; mechanical and verbal currently have empty subtype lists. The dice setup offers Mixed, Shapes/Polygons, Dice Dots, Characters, and Abstract Structures face markings. Both dice generators share `generators/spatial/misc/cube_model.py`, which enumerates the eleven cube-net topologies, folds nets with 3D orientation bases, and checks choices against all 24 rigid cube rotations. Each question's metadata records the cube faces, markings, opposite and adjacent pairs, option validity, proof rotation, and any violated constraint.
 
 Pattern Finding selects declarative attribute rules, builds every structured cell, hides one cell, and derives rule-aware distractors. Its Puzzle type setting offers Linear, Matrix, and Mixed; Mixed alternates Linear and Matrix questions so their counts differ by at most one. Matrix is one continuous sequence in reading order: after cell 3, cell 4 begins the next row, and after cell 6, cell 7 begins the final row. Each boxed figure has invisible 3×3 position anchors, and all figures use monochrome SVG. Question metadata records the complete generated states, active rules, missing cell, derivation, and each distractor's error. The shared figure viewer provides zoom, focus, and PNG download for these SVGs.
 
