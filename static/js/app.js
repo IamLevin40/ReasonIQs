@@ -1,5 +1,5 @@
 import { loadReasoning, createPractice } from "./api.js";
-import { state, findType, findSubtype, validateConfig, saveConfig, beginSession, finishSession } from "./state.js";
+import { state, findType, findSubtype, validateConfig, saveConfig, beginSession, finishSession, puzzleTypes, patternFittingModes } from "./state.js";
 import { startTimer, stopTimer } from "./timer.js";
 import { renderLoading, renderError, renderHome, renderSubtypes, renderSetup, updateSetup, renderTest, updateTimerDisplay, renderResult } from "./render.js";
 import { figureEntry, exportFigureBlock } from "./figures.js";
@@ -71,6 +71,8 @@ function route() {
   }
   state.type = reasoningType;
   state.subtype = practiceSubtype;
+  if (target.screen === "setup" && practiceSubtype?.generator_key === "spatial.pattern_fitting" && !patternFittingModes.includes(state.config.puzzle_type)) state.config.puzzle_type = "Mixed";
+  if (target.screen === "setup" && practiceSubtype?.generator_key === "spatial.pattern_finding" && !puzzleTypes.includes(state.config.puzzle_type)) state.config.puzzle_type = "Mixed";
   state.screen = target.screen;
   currentPath = path;
   if (target.screen === "home") renderHome();

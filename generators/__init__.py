@@ -22,6 +22,8 @@ def generate_session(type_id: str, subtype: dict, difficulty: str, item_count: i
         from generators.spatial.jigsaw_forming.generator import generate_question
     elif key == "spatial.pattern_finding":
         from generators.spatial.pattern_finding.generator import generate_question
+    elif key == "spatial.pattern_fitting":
+        from generators.spatial.pattern_fitting.generator import generate_question
     elif key == "spatial.which_does_not_belong":
         from generators.spatial.which_does_not_belong.generator import generate_question
 
@@ -35,6 +37,12 @@ def generate_session(type_id: str, subtype: dict, difficulty: str, item_count: i
         layouts = (["Linear", "Matrix"] * ((item_count + 1) // 2))[:item_count] if puzzle_type == "Mixed" else [puzzle_type] * item_count
         return [generate_question(type_id, subtype, difficulty, choice_count, index + 1, layout)
                 for index, layout in enumerate(layouts)]
+    if key == "spatial.pattern_fitting":
+        from generators.spatial.pattern_fitting.generator import MODES
+        if puzzle_type not in ("Mixed", *MODES):
+            raise ValueError("Unknown Pattern Fitting missing-region mode")
+        return [generate_question(type_id, subtype, difficulty, choice_count, index + 1, puzzle_type)
+                for index in range(item_count)]
     if key == "spatial.which_does_not_belong":
         from generators.spatial.which_does_not_belong.generator import eligible_rules
 

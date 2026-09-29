@@ -104,6 +104,8 @@ def create_practice():
         return error_response("Choose an available cube marking theme.", 400)
     if subtype["generator_key"] == "spatial.pattern_finding" and puzzle_type not in ("Linear", "Matrix", "Mixed"):
         return error_response("Choose an available puzzle type.", 400)
+    if subtype["generator_key"] == "spatial.pattern_fitting" and puzzle_type not in ("Mixed", "Cell Missing", "Four-Cell Junction Missing"):
+        return error_response("Choose an available missing-region mode.", 400)
 
     questions = generate_session(type_id, subtype, difficulty, item_count, choice_count, theme, puzzle_type)
     return jsonify({"questions": questions, "placeholder": all(question["metadata"].get("placeholder", False) for question in questions)})

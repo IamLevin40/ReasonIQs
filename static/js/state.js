@@ -1,6 +1,7 @@
 const STORAGE_KEY = "reasoniqs.setup.v1";
 export const cubeThemes = ["Mixed", "Shapes/Polygons", "Dice Dots", "Characters", "Abstract Structures"];
 export const puzzleTypes = ["Linear", "Matrix", "Mixed"];
+export const patternFittingModes = ["Mixed", "Cell Missing", "Four-Cell Junction Missing"];
 const defaults = { item_count: 10, choice_count: 4, timer_enabled: false, seconds_per_item: 45, difficulty: "Average", theme: "Mixed", puzzle_type: "Mixed" };
 
 function loadConfig() {
@@ -49,6 +50,7 @@ export function validateConfig(subtype = state.subtype) {
   if (!["Easy", "Average", "Challenge"].includes(config.difficulty) || !subtype?.difficulties.includes(config.difficulty)) return "Choose an available difficulty.";
   if (["spatial.dice_folding", "spatial.dice_unfolding"].includes(subtype?.generator_key) && !cubeThemes.includes(config.theme)) return "Choose an available cube marking theme.";
   if (subtype?.generator_key === "spatial.pattern_finding" && !puzzleTypes.includes(config.puzzle_type)) return "Choose an available puzzle type.";
+  if (subtype?.generator_key === "spatial.pattern_fitting" && !patternFittingModes.includes(config.puzzle_type)) return "Choose an available missing-region mode.";
   return "";
 }
 
