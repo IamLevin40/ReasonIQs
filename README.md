@@ -24,6 +24,7 @@ generators/               Dispatcher, reasoning-type packages, and shared placeh
     dice_unfolding/       Unfolding question generator
     pattern_finding/      Rule engine, inference validator, distractors, and SVG renderer
     which_does_not_belong/ Rule-first classification, ambiguity audit, and SVG renderer
+    rule_determining/     String transformation engine, directed graph, evidence audit, and SVG renderer
     misc/                 Cube model and SVG figures shared by spatial subtypes
   mechanical/             One package per mechanical subtype, plus misc/
   verbal/                 One package per verbal subtype, plus misc/
@@ -44,6 +45,8 @@ Pattern Finding selects declarative attribute rules, builds every structured cel
 Which Does Not Belong? selects a geometric classification rule before building choices. Its library includes properties, quantities, component relationships, closure, polygon sides, clockwise order, rotations and reflections, and compound constraints. Every component belongs to a cell in an invisible 1×1, 2×2, or 3×3 layout and sits at its exact center. Nested components share a cell as one structure; empty cells are allowed. Distance, center-offset, and symmetry-axis rules are excluded. Sessions rotate through available grid sizes, and figures draw from circles, polygons, stars, arrows, kites, shields, crescents, and varied asymmetric transformation silhouettes. The generator checks visible geometry signatures for duplicates and selects strongly separated choices. After shuffling, it verifies the intended predicate and checks for competing simpler classifications and presentation cues. Choices use monochrome SVG with an internal rounded frame and the shared zoom and PNG controls.
 
 Shapes/Polygons uses six regular polygons with three through eight sides and no extra marks. Characters displays only the chosen letters, numbers, or symbols. Marking symmetries are included in answer validation.
+
+Rule Determining selects pure string operations, solves the complete query, then adds demonstrations that eliminate competing registered meanings. Metadata records the directed logical grid, operator dictionary, demonstrations, intermediate query states, and distractor misconceptions. Its neutral SVG projection uses the shared focus, zoom, and PNG controls.
 
 ## Question and figure data
 

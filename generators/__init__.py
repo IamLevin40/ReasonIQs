@@ -24,6 +24,9 @@ def generate_session(type_id: str, subtype: dict, difficulty: str, item_count: i
         from generators.spatial.pattern_finding.generator import generate_question
     elif key == "spatial.which_does_not_belong":
         from generators.spatial.which_does_not_belong.generator import generate_question
+
+    elif key == "spatial.rule_determining":
+        from generators.spatial.rule_determining.generator import generate_question
     else:
         return generate_placeholder_session(type_id, subtype, difficulty, item_count, choice_count)
     if key == "spatial.pattern_finding":
