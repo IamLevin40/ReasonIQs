@@ -13,6 +13,14 @@ python app.py
 
 Open <http://127.0.0.1:5000>. On macOS/Linux, activate with `source venv/bin/activate` and use `python3 -m venv venv` if needed. If PowerShell blocks activation, run `venv\Scripts\python.exe app.py` directly.
 
+## Deploy to Vercel from Git
+
+1. Push this repository to GitHub, GitLab, or Bitbucket.
+2. In Vercel, choose **Add New → Project**, import the repository, and set the root directory to this repository's root (the folder containing `app.py` and `requirements.txt`).
+3. Keep the detected Flask framework and default build/output settings, then deploy. No environment variables are required.
+
+Vercel detects the top-level Flask `app` in `app.py`. It runs the API as a Python function and serves `public/static/` at `/static/` from its CDN. The same asset URLs also work with `python app.py` locally. The browser requests larger practice sessions in batches to stay within Vercel's function response size limit. Practice sessions live in the browser; reloading an active session returns to setup.
+
 ## Structure
 
 ```text
@@ -31,10 +39,10 @@ generators/               Dispatcher, reasoning-type packages, and shared placeh
   verbal/                 One package per verbal subtype, plus misc/
   misc/                   Placeholder adapter shared across reasoning types
 templates/index.html      Accessible application shell
-static/css/app.css        Structural and responsive styles
-static/css/theme.css      Lively challenge-board visual identity
-static/js/                API, state, timer, rendering and interactions
-static/assets/icons/      Local SVG symbols
+public/static/css/app.css   Structural and responsive styles
+public/static/css/theme.css Lively challenge-board visual identity
+public/static/js/           API, state, timer, rendering and interactions
+public/static/assets/icons/ Local SVG symbols
 tests/                    API and catalog tests
 venv/                     Project-local Python environment (ignored by Git)
 ```
@@ -71,7 +79,7 @@ Each question has an `id`, optional `text` (legacy `prompt` is accepted), option
 }
 ```
 
-Images must come from the app origin or a `data:image/png`, `image/jpeg`, or `image/webp` base64 URL. SVG markup is sanitized before display. Every figure needs a descriptive `alt`; an optional `caption` appears below it. For a canvas payload, register a synchronous drawing function with `registerCanvasRenderer(key, draw)` from `static/js/figures.js`, then send `{ "kind": "canvas", "renderer": key, "width": 640, "height": 480, "data": { ... }, "alt": "..." }`. A DOM figure can use `registerDomRenderer(key, render, exportCanvas)` and `{ "kind": "dom", "renderer": key, "data": { ... }, "alt": "..." }`. `exportCanvas` is optional; without it the export utility captures the local styled DOM through SVG `foreignObject`. Registered functions live in the browser, while the API sends only their keys and data.
+Images must come from the app origin or a `data:image/png`, `image/jpeg`, or `image/webp` base64 URL. SVG markup is sanitized before display. Every figure needs a descriptive `alt`; an optional `caption` appears below it. For a canvas payload, register a synchronous drawing function with `registerCanvasRenderer(key, draw)` from `public/static/js/figures.js`, then send `{ "kind": "canvas", "renderer": key, "width": 640, "height": 480, "data": { ... }, "alt": "..." }`. A DOM figure can use `registerDomRenderer(key, render, exportCanvas)` and `{ "kind": "dom", "renderer": key, "data": { ... }, "alt": "..." }`. `exportCanvas` is optional; without it the export utility captures the local styled DOM through SVG `foreignObject`. Registered functions live in the browser, while the API sends only their keys and data.
 
 Hover over a figure, then use its Inspect button to open the viewer. On touch screens, the button stays visible. The viewer supports mouse wheel, touch pinch, drag, keyboard `+`/`-`, arrow keys, `0`/Home, and Escape. The PNG control downloads one figure, or all figures in its question or choice block as one image in display order.
 

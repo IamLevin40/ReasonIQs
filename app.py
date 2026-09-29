@@ -12,7 +12,7 @@ from generators.spatial.misc.cube_figures import THEMES
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "data" / "reasoning_types.json"
-app = Flask(__name__)
+app = Flask(__name__, static_folder="public/static")
 
 
 def load_catalog() -> dict:
