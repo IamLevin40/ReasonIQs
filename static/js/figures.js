@@ -156,13 +156,13 @@ function loadImage(src) {
   });
 }
 
-function svgImage(svg) {
+function svgImage(svg, width, height) {
   const copy = svg.cloneNode(true);
   copy.removeAttribute("role");
   copy.removeAttribute("focusable");
-  const viewBox = copy.getAttribute("viewBox")?.split(/[ ,]+/).map(Number);
-  const width = viewBox?.[2] || Number(copy.getAttribute("width")) || 800;
-  const height = viewBox?.[3] || Number(copy.getAttribute("height")) || 600;
+  // The page displays the viewBox inside this viewport (usually with empty
+  // space on two sides). Rasterizing at the viewBox size and stretching it to
+  // the element's bounds would remove that space and distort the figure.
   copy.setAttribute("width", width);
   copy.setAttribute("height", height);
   return loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(copy))}`);
@@ -184,23 +184,38 @@ function domImage(element) {
   return loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><foreignObject width="100%" height="100%">${xml}</foreignObject></svg>`)}`);
 }
 
-async function drawable(entry) {
+async function drawable(entry, rect) {
   const visual = entry.visual;
   if (visual instanceof HTMLImageElement) {
     if (!visual.complete || !visual.naturalWidth) await visual.decode();
     return visual;
   }
-  if (visual instanceof SVGSVGElement) return svgImage(visual);
+  if (visual instanceof SVGSVGElement) return svgImage(visual, rect.width, rect.height);
   if (visual instanceof HTMLCanvasElement) return visual;
   const custom = domRenderers.get(entry.figure.renderer)?.exportCanvas;
   if (custom) return custom(entry.figure.data, visual);
   return domImage(visual);
 }
 
+function drawVisual(context, image, visual, x, y, width, height) {
+  if (visual instanceof HTMLImageElement || visual instanceof HTMLCanvasElement) {
+    // Both media types use object-fit: contain in the practice view.
+    const sourceWidth = image.naturalWidth || image.width;
+    const sourceHeight = image.naturalHeight || image.height;
+    const factor = Math.min(width / sourceWidth, height / sourceHeight);
+    const fittedWidth = sourceWidth * factor;
+    const fittedHeight = sourceHeight * factor;
+    context.drawImage(image, x + (width - fittedWidth) / 2, y + (height - fittedHeight) / 2, fittedWidth, fittedHeight);
+    return;
+  }
+  context.drawImage(image, x, y, width, height);
+}
+
 export async function exportFigureBlock(host, block) {
   const cards = [...host.querySelectorAll(".figure-card")];
   if (!cards.length) return;
   const visuals = cards.map(card => card.querySelector(".figure-view").firstElementChild);
+  await Promise.all(visuals.filter(visual => visual instanceof HTMLImageElement).map(visual => visual.decode()));
   const bounds = visuals.map(visual => visual.getBoundingClientRect());
   const left = Math.min(...bounds.map(rect => rect.left));
   const top = Math.min(...bounds.map(rect => rect.top));
@@ -209,7 +224,7 @@ export async function exportFigureBlock(host, block) {
   const width = Math.max(1, right - left);
   const height = Math.max(1, bottom - top);
   const padding = 32;
-  const scale = Math.min(12, Math.max(2, 1600 / width), 8192 / Math.max(width + padding * 2, height + padding * 2));
+  const scale = Math.min(window.devicePixelRatio || 1, 8192 / Math.max(width + padding * 2, height + padding * 2));
   const canvas = document.createElement("canvas");
   canvas.width = Math.ceil((width + padding * 2) * scale);
   canvas.height = Math.ceil((height + padding * 2) * scale);
@@ -219,9 +234,9 @@ export async function exportFigureBlock(host, block) {
   context.fillRect(0, 0, canvas.width / scale, canvas.height / scale);
   for (let i = 0; i < cards.length; i++) {
     const entry = figureEntry(cards[i].querySelector(".figure-inspect"));
-    const image = await drawable(entry);
     const rect = bounds[i];
-    context.drawImage(image, padding + rect.left - left, padding + rect.top - top, rect.width, rect.height);
+    const image = await drawable(entry, rect);
+    drawVisual(context, image, entry.visual, padding + rect.left - left, padding + rect.top - top, rect.width, rect.height);
   }
   const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
   if (!blob) throw new Error("Could not create PNG");
